@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Gamepad2, Volume2, VolumeX } from "lucide-react";
 import { useAmbientMusic } from "@/hooks/useAmbientMusic";
+import { Socials } from "@/components/Socials";
 
 type Props = { gameOn: boolean; onToggle: () => void };
 
@@ -22,13 +23,16 @@ export function Header({ gameOn, onToggle }: Props) {
       </a>
 
       <nav className="hidden items-center gap-6 text-base font-semibold text-ink md:flex">
-        <a href="#shop" className="hover:underline underline-offset-4">Browse</a>
+        <a href="/#shop" className="hover:underline underline-offset-4">Browse</a>
+        <a href="/about" className="hover:underline underline-offset-4">About</a>
         <a href="/mystery-box" className="hover:underline underline-offset-4">Prize</a>
-        <a href="#story" className="hover:underline underline-offset-4">Story</a>
-        <a href="#faq" className="hover:underline underline-offset-4">FAQ</a>
+        <a href="/#faq" className="hover:underline underline-offset-4">FAQ</a>
       </nav>
 
       <div className="flex items-center gap-2">
+        <div className="hidden sm:block">
+          <Socials size="sm" />
+        </div>
         <button
           onClick={toggleMute}
           className="grid h-10 w-10 place-items-center rounded-full border-4 border-ink bg-card shadow-pop-sm transition-colors hover:bg-secondary"

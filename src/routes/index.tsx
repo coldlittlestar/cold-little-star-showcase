@@ -92,7 +92,11 @@ function Index() {
           </div>
         </section>
 
-        <footer className="mx-auto max-w-7xl px-4 text-center text-sm text-ink/70 md:px-8">
+        <footer className="mx-auto max-w-7xl space-y-3 px-4 text-center text-sm text-ink/70 md:px-8">
+          <div className="flex flex-col items-center gap-2">
+            <p className="font-display text-xs font-bold uppercase tracking-widest">Follow the orbit</p>
+            <Socials size="md" />
+          </div>
           <p>© {new Date().getFullYear()} Cold Little Star — Made with glitter & gravity.</p>
         </footer>
       </div>
