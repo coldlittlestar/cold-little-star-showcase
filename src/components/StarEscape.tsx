@@ -349,8 +349,45 @@ export function StarEscape({ open, onClose }: Props) {
                   <p className="mt-3 font-display text-xs uppercase tracking-widest text-mint">Best</p>
                   <p className="font-display text-2xl font-bold text-mint">{best}</p>
                 </div>
+                {/* On-screen D-pad — essential for touch, handy on desktop too */}
+                <div className="rounded-2xl border-4 border-ink bg-sky p-3 shadow-pop-sm">
+                  <p className="mb-2 text-center font-display text-[10px] font-bold uppercase tracking-widest text-ink/70">
+                    Touch Controls
+                  </p>
+                  <div className="mx-auto grid w-40 grid-cols-3 grid-rows-3 gap-1.5 select-none">
+                    <div />
+                    <button
+                      type="button"
+                      aria-label="Up"
+                      onPointerDown={(e) => handlePadPress(e, dirs.ArrowUp)}
+                      className="grid h-12 touch-none place-items-center rounded-xl border-4 border-ink bg-card text-lg font-bold shadow-pop-sm active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+                    >▲</button>
+                    <div />
+                    <button
+                      type="button"
+                      aria-label="Left"
+                      onPointerDown={(e) => handlePadPress(e, dirs.ArrowLeft)}
+                      className="grid h-12 touch-none place-items-center rounded-xl border-4 border-ink bg-card text-lg font-bold shadow-pop-sm active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+                    >◀</button>
+                    <div className="grid place-items-center text-xl">★</div>
+                    <button
+                      type="button"
+                      aria-label="Right"
+                      onPointerDown={(e) => handlePadPress(e, dirs.ArrowRight)}
+                      className="grid h-12 touch-none place-items-center rounded-xl border-4 border-ink bg-card text-lg font-bold shadow-pop-sm active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+                    >▶</button>
+                    <div />
+                    <button
+                      type="button"
+                      aria-label="Down"
+                      onPointerDown={(e) => handlePadPress(e, dirs.ArrowDown)}
+                      className="grid h-12 touch-none place-items-center rounded-xl border-4 border-ink bg-card text-lg font-bold shadow-pop-sm active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+                    >▼</button>
+                    <div />
+                  </div>
+                </div>
                 <div className="rounded-2xl border-4 border-ink bg-secondary p-3 text-xs shadow-pop-sm">
-                  <p><strong>Arrows / WASD</strong> or swipe to steer.</p>
+                  <p><strong>Arrows / WASD</strong>, swipe, or tap the D-pad.</p>
                   <p className="mt-1">Eat ⭐ to grow your glitter trail. Avoid the purple <strong>black holes</strong>.</p>
                 </div>
               </aside>
