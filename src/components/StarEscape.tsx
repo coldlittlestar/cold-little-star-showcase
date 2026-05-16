@@ -187,6 +187,15 @@ export function StarEscape({ open, onClose }: Props) {
     return () => clearInterval(musicId);
   }, [open, over]);
 
+  // shared steer (used by swipe + on-screen D-pad)
+  const steer = useCallback((nd: Dir) => {
+    const cur = dirRef.current;
+    if (cur.x + nd.x === 0 && cur.y + nd.y === 0) return;
+    if (cur.x === nd.x && cur.y === nd.y) return;
+    playTurnSound();
+    setDir(nd);
+  }, []);
+
   // mobile swipe
   const touchStart = useRef<{ x: number; y: number } | null>(null);
   const onTouchStart = (e: React.TouchEvent) => {
@@ -198,17 +207,22 @@ export function StarEscape({ open, onClose }: Props) {
     const t = e.changedTouches[0];
     const dx = t.clientX - touchStart.current.x;
     const dy = t.clientY - touchStart.current.y;
-    const cur = dirRef.current;
-    const tryDir = (nd: Dir) => {
-      if (cur.x + nd.x === 0 && cur.y + nd.y === 0) return;
-      setDir(nd);
-    };
+    if (Math.abs(dx) < 12 && Math.abs(dy) < 12) {
+      touchStart.current = null;
+      return;
+    }
     if (Math.abs(dx) > Math.abs(dy)) {
-      tryDir(dx > 0 ? dirs.ArrowRight : dirs.ArrowLeft);
+      steer(dx > 0 ? dirs.ArrowRight : dirs.ArrowLeft);
     } else {
-      tryDir(dy > 0 ? dirs.ArrowDown : dirs.ArrowUp);
+      steer(dy > 0 ? dirs.ArrowDown : dirs.ArrowUp);
     }
     touchStart.current = null;
+  };
+
+  const handlePadPress = (e: React.PointerEvent, nd: Dir) => {
+    e.preventDefault();
+    if (over) return;
+    steer(nd);
   };
 
   return (
