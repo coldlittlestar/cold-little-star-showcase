@@ -23,6 +23,64 @@ function randCell(exclude: Cell[]): Cell {
   }
 }
 
+function playTurnSound() {
+  const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+  const osc = audioContext.createOscillator();
+  const gain = audioContext.createGain();
+  osc.connect(gain);
+  gain.connect(audioContext.destination);
+  osc.frequency.value = 400;
+  gain.gain.setValueAtTime(0.1, audioContext.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+  osc.start(audioContext.currentTime);
+  osc.stop(audioContext.currentTime + 0.1);
+}
+
+function playGameOverSound() {
+  const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+  const now = audioContext.currentTime;
+  for (let i = 0; i < 3; i++) {
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+    osc.frequency.value = 200 - i * 50;
+    gain.gain.setValueAtTime(0.1, now + i * 0.15);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.15 + 0.2);
+    osc.start(now + i * 0.15);
+    osc.stop(now + i * 0.15 + 0.2);
+  }
+}
+
+function createBackgroundMusic() {
+  const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+  const now = audioContext.currentTime;
+  const notes = [262, 294, 330, 349, 392, 392, 349, 330, 294, 262]; // Simple retro melody
+
+  const playNote = (freq: number, time: number, duration: number) => {
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+    osc.type = "square";
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.05, time);
+    gain.gain.exponentialRampToValueAtTime(0.01, time + duration);
+    osc.start(time);
+    osc.stop(time + duration);
+  };
+
+  let time = now;
+  const musicLoop = setInterval(() => {
+    notes.forEach((note, idx) => {
+      playNote(note, time + idx * 0.15, 0.15);
+    });
+    time += notes.length * 0.15;
+  }, notes.length * 150);
+
+  return musicLoop;
+}
+
 type Props = { open: boolean; onClose: () => void };
 
 export function StarEscape({ open, onClose }: Props) {
@@ -65,6 +123,7 @@ export function StarEscape({ open, onClose }: Props) {
         const next = dirs[e.key as keyof typeof dirs];
         const cur = dirRef.current;
         if (cur.x + next.x === 0 && cur.y + next.y === 0) return;
+        playTurnSound();
         setDir(next);
       }
       if (e.key === " " && over) reset();
@@ -82,14 +141,17 @@ export function StarEscape({ open, onClose }: Props) {
         const head = prev[0];
         const nh = { x: head.x + dirRef.current.x, y: head.y + dirRef.current.y };
         if (nh.x < 0 || nh.x >= COLS || nh.y < 0 || nh.y >= ROWS) {
+          playGameOverSound();
           setOver(true);
           return prev;
         }
         if (prev.some((c) => c.x === nh.x && c.y === nh.y)) {
+          playGameOverSound();
           setOver(true);
           return prev;
         }
         if (holes.some((h) => h.x === nh.x && h.y === nh.y)) {
+          playGameOverSound();
           setOver(true);
           return prev;
         }
@@ -117,6 +179,13 @@ export function StarEscape({ open, onClose }: Props) {
     }, TICK_MS);
     return () => clearInterval(id);
   }, [open, over, food, holes, score]);
+
+  // background music
+  useEffect(() => {
+    if (!open || over) return;
+    const musicId = createBackgroundMusic();
+    return () => clearInterval(musicId);
+  }, [open, over]);
 
   // mobile swipe
   const touchStart = useRef<{ x: number; y: number } | null>(null);
@@ -216,24 +285,30 @@ export function StarEscape({ open, onClose }: Props) {
                 {snake.map((c, i) => (
                   <div
                     key={i}
-                    className="absolute"
+                    className="absolute grid place-items-center"
                     style={{
                       left: `${(c.x / COLS) * 100}%`,
                       top: `${(c.y / ROWS) * 100}%`,
                       width: `${100 / COLS}%`,
                       height: `${100 / ROWS}%`,
-                      padding: 1,
                     }}
                   >
-                    <div
-                      className="h-full w-full rounded border-2 border-ink"
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="h-[75%] w-[75%]"
                       style={{
-                        background:
-                          i === 0
-                            ? "var(--color-star)"
-                            : `color-mix(in oklab, var(--color-star) ${Math.max(40, 100 - i * 6)}%, var(--color-coral))`,
+                        filter: i === 0 ? "drop-shadow(0 0 2px rgba(229, 207, 67, 0.6))" : `opacity-${Math.max(0.4, 1 - i * 0.08)}`,
                       }}
-                    />
+                      aria-hidden
+                    >
+                      <path
+                        d="M12 2l2.9 6.3L22 9.3l-5.2 4.7L18.2 22 12 18.4 5.8 22l1.4-8L2 9.3l7.1-1z"
+                        fill="var(--color-star)"
+                        stroke="var(--color-ink)"
+                        strokeWidth="1.8"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
                   </div>
                 ))}
 

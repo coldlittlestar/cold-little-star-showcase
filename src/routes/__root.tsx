@@ -7,6 +7,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { useAmbientMusic } from "@/hooks/useAmbientMusic";
 
 import appCss from "../styles.css?url";
 

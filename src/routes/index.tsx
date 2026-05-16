@@ -7,6 +7,7 @@ import { Filters } from "@/components/Filters";
 import { ProductCard } from "@/components/ProductCard";
 import { SnagModal } from "@/components/SnagModal";
 import { StarEscape } from "@/components/StarEscape";
+import { Twinkles } from "@/components/Twinkles";
 import { Star, Planet, Moon } from "@/components/Doodles";
 import { PRODUCTS, type Product } from "@/lib/products";
 
@@ -26,6 +27,7 @@ function Index() {
 
   return (
     <div className="relative min-h-screen overflow-x-clip bg-sky bg-stars">
+      <Twinkles />
       {/* floating doodles */}
       <Moon className="pointer-events-none absolute left-4 top-32 h-8 w-8 opacity-80 md:left-8" />
       <Planet className="pointer-events-none absolute right-6 top-44 h-10 w-10 opacity-80 md:right-12" />
