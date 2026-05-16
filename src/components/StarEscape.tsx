@@ -54,8 +54,7 @@ function playGameOverSound() {
 
 function createBackgroundMusic() {
   const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-  const now = audioContext.currentTime;
-  const notes = [262, 294, 330, 349, 392, 392, 349, 330, 294, 262]; // Simple retro melody
+  const notes = [262, 294, 330, 349, 392, 392, 349, 330, 294, 262];
 
   const playNote = (freq: number, time: number, duration: number) => {
     const osc = audioContext.createOscillator();
@@ -70,15 +69,20 @@ function createBackgroundMusic() {
     osc.stop(time + duration);
   };
 
-  let time = now;
-  const musicLoop = setInterval(() => {
-    notes.forEach((note, idx) => {
-      playNote(note, time + idx * 0.15, 0.15);
-    });
-    time += notes.length * 0.15;
-  }, notes.length * 150);
+  const playRound = () => {
+    const start = audioContext.currentTime;
+    notes.forEach((note, idx) => playNote(note, start + idx * 0.15, 0.15));
+  };
 
-  return musicLoop;
+  playRound();
+  const musicLoop = setInterval(playRound, notes.length * 150);
+
+  return {
+    stop: () => {
+      clearInterval(musicLoop);
+      audioContext.close().catch(() => {});
+    },
+  };
 }
 
 type Props = { open: boolean; onClose: () => void };
@@ -183,9 +187,18 @@ export function StarEscape({ open, onClose }: Props) {
   // background music
   useEffect(() => {
     if (!open || over) return;
-    const musicId = createBackgroundMusic();
-    return () => clearInterval(musicId);
+    const music = createBackgroundMusic();
+    return () => music.stop();
   }, [open, over]);
+
+  // shared steer (used by swipe + on-screen D-pad)
+  const steer = useCallback((nd: Dir) => {
+    const cur = dirRef.current;
+    if (cur.x + nd.x === 0 && cur.y + nd.y === 0) return;
+    if (cur.x === nd.x && cur.y === nd.y) return;
+    playTurnSound();
+    setDir(nd);
+  }, []);
 
   // mobile swipe
   const touchStart = useRef<{ x: number; y: number } | null>(null);
@@ -198,17 +211,22 @@ export function StarEscape({ open, onClose }: Props) {
     const t = e.changedTouches[0];
     const dx = t.clientX - touchStart.current.x;
     const dy = t.clientY - touchStart.current.y;
-    const cur = dirRef.current;
-    const tryDir = (nd: Dir) => {
-      if (cur.x + nd.x === 0 && cur.y + nd.y === 0) return;
-      setDir(nd);
-    };
+    if (Math.abs(dx) < 12 && Math.abs(dy) < 12) {
+      touchStart.current = null;
+      return;
+    }
     if (Math.abs(dx) > Math.abs(dy)) {
-      tryDir(dx > 0 ? dirs.ArrowRight : dirs.ArrowLeft);
+      steer(dx > 0 ? dirs.ArrowRight : dirs.ArrowLeft);
     } else {
-      tryDir(dy > 0 ? dirs.ArrowDown : dirs.ArrowUp);
+      steer(dy > 0 ? dirs.ArrowDown : dirs.ArrowUp);
     }
     touchStart.current = null;
+  };
+
+  const handlePadPress = (e: React.PointerEvent, nd: Dir) => {
+    e.preventDefault();
+    if (over) return;
+    steer(nd);
   };
 
   return (
@@ -335,8 +353,45 @@ export function StarEscape({ open, onClose }: Props) {
                   <p className="mt-3 font-display text-xs uppercase tracking-widest text-mint">Best</p>
                   <p className="font-display text-2xl font-bold text-mint">{best}</p>
                 </div>
+                {/* On-screen D-pad — essential for touch, handy on desktop too */}
+                <div className="rounded-2xl border-4 border-ink bg-sky p-3 shadow-pop-sm">
+                  <p className="mb-2 text-center font-display text-[10px] font-bold uppercase tracking-widest text-ink/70">
+                    Touch Controls
+                  </p>
+                  <div className="mx-auto grid w-40 grid-cols-3 grid-rows-3 gap-1.5 select-none">
+                    <div />
+                    <button
+                      type="button"
+                      aria-label="Up"
+                      onPointerDown={(e) => handlePadPress(e, dirs.ArrowUp)}
+                      className="grid h-12 touch-none place-items-center rounded-xl border-4 border-ink bg-card text-lg font-bold shadow-pop-sm active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+                    >▲</button>
+                    <div />
+                    <button
+                      type="button"
+                      aria-label="Left"
+                      onPointerDown={(e) => handlePadPress(e, dirs.ArrowLeft)}
+                      className="grid h-12 touch-none place-items-center rounded-xl border-4 border-ink bg-card text-lg font-bold shadow-pop-sm active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+                    >◀</button>
+                    <div className="grid place-items-center text-xl">★</div>
+                    <button
+                      type="button"
+                      aria-label="Right"
+                      onPointerDown={(e) => handlePadPress(e, dirs.ArrowRight)}
+                      className="grid h-12 touch-none place-items-center rounded-xl border-4 border-ink bg-card text-lg font-bold shadow-pop-sm active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+                    >▶</button>
+                    <div />
+                    <button
+                      type="button"
+                      aria-label="Down"
+                      onPointerDown={(e) => handlePadPress(e, dirs.ArrowDown)}
+                      className="grid h-12 touch-none place-items-center rounded-xl border-4 border-ink bg-card text-lg font-bold shadow-pop-sm active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+                    >▼</button>
+                    <div />
+                  </div>
+                </div>
                 <div className="rounded-2xl border-4 border-ink bg-secondary p-3 text-xs shadow-pop-sm">
-                  <p><strong>Arrows / WASD</strong> or swipe to steer.</p>
+                  <p><strong>Arrows / WASD</strong>, swipe, or tap the D-pad.</p>
                   <p className="mt-1">Eat ⭐ to grow your glitter trail. Avoid the purple <strong>black holes</strong>.</p>
                 </div>
               </aside>
