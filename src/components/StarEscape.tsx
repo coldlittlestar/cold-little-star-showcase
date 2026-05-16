@@ -54,8 +54,7 @@ function playGameOverSound() {
 
 function createBackgroundMusic() {
   const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-  const now = audioContext.currentTime;
-  const notes = [262, 294, 330, 349, 392, 392, 349, 330, 294, 262]; // Simple retro melody
+  const notes = [262, 294, 330, 349, 392, 392, 349, 330, 294, 262];
 
   const playNote = (freq: number, time: number, duration: number) => {
     const osc = audioContext.createOscillator();
@@ -70,15 +69,20 @@ function createBackgroundMusic() {
     osc.stop(time + duration);
   };
 
-  let time = now;
-  const musicLoop = setInterval(() => {
-    notes.forEach((note, idx) => {
-      playNote(note, time + idx * 0.15, 0.15);
-    });
-    time += notes.length * 0.15;
-  }, notes.length * 150);
+  const playRound = () => {
+    const start = audioContext.currentTime;
+    notes.forEach((note, idx) => playNote(note, start + idx * 0.15, 0.15));
+  };
 
-  return musicLoop;
+  playRound();
+  const musicLoop = setInterval(playRound, notes.length * 150);
+
+  return {
+    stop: () => {
+      clearInterval(musicLoop);
+      audioContext.close().catch(() => {});
+    },
+  };
 }
 
 type Props = { open: boolean; onClose: () => void };
