@@ -187,8 +187,8 @@ export function StarEscape({ open, onClose }: Props) {
   // background music
   useEffect(() => {
     if (!open || over) return;
-    const musicId = createBackgroundMusic();
-    return () => clearInterval(musicId);
+    const music = createBackgroundMusic();
+    return () => music.stop();
   }, [open, over]);
 
   // shared steer (used by swipe + on-screen D-pad)
